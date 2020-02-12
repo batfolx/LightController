@@ -13,9 +13,10 @@ type AlexaResponse struct {
 			Type string `json:"type"`
 			Text string `json:"text"`
 		} `json:"outputSpeech"`
+		ShouldEndSession bool `json:"shouldEndSession"`
 	} `json:"response"`
 
-	ShouldEndSession bool `json:"shouldEndSession"`
+	
 }
 
 
@@ -39,7 +40,7 @@ func CreateAlexaResponse() AlexaResponse {
 	 a.Version = "1.0"
 	 a.Response.OutputSpeech.Type = "PlainText"
 	 a.Response.OutputSpeech.Text = "Welcome default Victor!"
-	 a.ShouldEndSession = false
+	 a.Response.ShouldEndSession = false
 	 return a
 
 
@@ -62,20 +63,13 @@ func HandleRequest(context context.Context, request AlexaRequest) (AlexaResponse
 		alexa_response.Say("I am sorry for being here!")
 	} else {
 
-
 		switch request.Request.Intent.Name {
-		case "LaunchRequest":
-			alexa_response.Say("Good evening")
-		case "SessionEndedRequest":
-			alexa_response.Say("Goodbye noob")
+		case "HelloIntent":
+			alexa_response.Say("Well hello there you little chicken!")
 		default: 
-			alexa_response.Say("I don't know what that means.")
-
+			alexa_response.Say("I have absolutely no idea what you mean or will ever mean by that")
 		}
 	}
-
-
-
 	
 	return alexa_response, nil
 }
