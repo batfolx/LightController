@@ -65,9 +65,9 @@ func HandleRequest(context context.Context, request AlexaRequest) (AlexaResponse
 
 		switch request.Request.Intent.Name {
 		case "LaunchRequest":
-			alexa_response.Say("Good evening you fucking bitch")
+			alexa_response.Say("Good evening")
 		case "SessionEndedRequest":
-			alexa_response.Say("Goodbye you trog")
+			alexa_response.Say("Goodbye noob")
 		default: 
 			alexa_response.Say("I don't know what that means.")
 
