@@ -4,6 +4,7 @@ import (
         "fmt"
         "context"
         "github.com/aws/aws-lambda-go/lambda"
+        "strconv"
 )
 
 type AlexaResponse struct {
@@ -28,10 +29,10 @@ type AlexaRequest struct {
 		Intent struct {
 			Name               string `json:"name"`
 			ConfirmationStatus string `json:"confirmationstatus"`
+			Slots interface{} `json:"slots"`
 		} `json:"intent"`
 	} `json:"request"`
 }
-
 
 
 func CreateAlexaResponse() AlexaResponse {
@@ -42,16 +43,37 @@ func CreateAlexaResponse() AlexaResponse {
 	 a.Response.OutputSpeech.Text = "Welcome default Victor!"
 	 a.Response.ShouldEndSession = false
 	 return a
-
-
 }
 
 func (a *AlexaResponse) Say(message string) {
 	a.Response.OutputSpeech.Text = message
 }
 
+func (a *AlexaResponse) EndSession() {
+	a.Response.ShouldEndSession = true
+}
 
 
+
+
+
+
+
+
+
+func LowerBrightnessIntent(a *AlexaRequest) string {
+	
+	amount, err := strconv.Atoi(a.Request.Intent.Slots.amount)
+	if err != nil {
+		return fmt.Sprintf("The amount you wanted was not valid. Amount was %s", a.Request.Intent.Slots.amount)
+	}
+
+	// code to lower the bulb brightness here
+
+	return fmt.Sprintf("Bulb successfully lowered by %d amount!", amount)
+
+
+}	
 
 
 func HandleRequest(context context.Context, request AlexaRequest) (AlexaResponse, error) {
@@ -59,13 +81,19 @@ func HandleRequest(context context.Context, request AlexaRequest) (AlexaResponse
 	alexa_response := CreateAlexaResponse()
 	fmt.Printf("THIS IS THE REQUEST TYPE! -> %s <-\n", request.Request.Type)
 
-	if request.Request.Type == "LaunchRequest" {
-		alexa_response.Say("I am sorry for being here!")
-	} else {
+	request_type := request.Request.Type
 
-		switch request.Request.Intent.Name {
+	if request_type == "LaunchRequest" {
+		alexa_response.Say("Welcome back, Victor.")
+	} else if request_type == "IntentRequest"{
+
+		intent := request.Request.Intent.Name
+
+		switch intent {
 		case "HelloIntent":
-			alexa_response.Say("Well hello there you little chicken!")
+			alexa_response.Say("Well hello there!")
+		case "LowerBrightnessIntent":
+			alexa_response.Say(LowerBrightnessIntent(&request))
 		default: 
 			alexa_response.Say("I have absolutely no idea what you mean or will ever mean by that")
 		}
