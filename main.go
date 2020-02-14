@@ -7,6 +7,17 @@ import (
         "strconv"
 )
 
+const (
+	red = "red"
+	green = "green"
+	blue = "blue"
+	yellow = "yellow"
+	purple = "purple"
+	orange = "orange"
+)
+
+
+
 type AlexaResponse struct {
 	Version  string `json:"version"`
 	Response struct {
@@ -17,7 +28,6 @@ type AlexaResponse struct {
 		ShouldEndSession bool `json:"shouldEndSession"`
 	} `json:"response"`
 
-	
 }
 
 
@@ -27,12 +37,22 @@ type AlexaRequest struct {
 		Type   string `json:"type"`
 		Time   string `json:"timestamp"`
 		Intent struct {
+
 			Name               string `json:"name"`
 			ConfirmationStatus string `json:"confirmationstatus"`
-			Slots interface{} `json:"slots"`
+
+			Slots map[string]struct { // map of strings to other structs
+
+				Name string 	          `json:"name"`
+				ConfirmationStatus string `json:"confirmationStatus,omitempty"`
+				Value string    	      `json:"value"`	
+
+			} `json:"slots"`
 		} `json:"intent"`
 	} `json:"request"`
 }
+
+
 
 
 func CreateAlexaResponse() AlexaResponse {
@@ -55,22 +75,72 @@ func (a *AlexaResponse) EndSession() {
 
 
 
+func HigherBrightnessIntent(a *AlexaRequest) string {
+
+	response := ""
+	slots := a.Request.Intent.Slots
+
+	val := slots["amount"].Value; 
+
+	if val == "" {
+		val = "10"
+	}
+
+	value, err := strconv.Atoi(val)
+
+	if err != nil {
+		response = "I could not understand your value, please try again."
+		return response
+	}
+
+	if value < 0 || value > 100 {
+		response = fmt.Sprintf("How can I higher it by %d percent?", value)
+		return response
+	}
 
 
-
+	response = fmt.Sprintf("Okay, highering bulb brightness by %d percent! Enjoy!", value)
+	return response
+}
 
 
 
 func LowerBrightnessIntent(a *AlexaRequest) string {
+
 	
-	amount, err := strconv.Atoi(a.Request.Intent.Slots.amount)
-	if err != nil {
-		return fmt.Sprintf("The amount you wanted was not valid. Amount was %s", a.Request.Intent.Slots.amount)
+	response := ""
+	slots := a.Request.Intent.Slots
+
+	value_str := slots["amount"].Value
+
+	if value_str == "" {
+		value_str = "10"
 	}
 
-	// code to lower the bulb brightness here
+	value, err := strconv.Atoi(value_str)
 
-	return fmt.Sprintf("Bulb successfully lowered by %d amount!", amount)
+	if err != nil {
+		response = fmt.Sprintf("I can't understand how much you want me to lower it by.")
+		return response
+	}
+
+	if value < 0 {
+		response = fmt.Sprintf("You can't lower the brightness below 0 are you crazy pills?")
+		return response
+	}
+
+	if value > 100 {
+		response = fmt.Sprintf("You can't lower the brightness more than 100 percent are you insane pills?")
+		return response		
+	}
+
+
+	/* code to lower the bulb brightness here */
+
+
+	response = fmt.Sprintf("Okay! Lowering brightness by %d percent!", value)
+
+	return response
 
 
 }	
@@ -94,9 +164,16 @@ func HandleRequest(context context.Context, request AlexaRequest) (AlexaResponse
 			alexa_response.Say("Well hello there!")
 		case "LowerBrightnessIntent":
 			alexa_response.Say(LowerBrightnessIntent(&request))
+		case "HigherBrightnessIntent":
+			alexa_response.Say(HigherBrightnessIntent(&request))
 		default: 
 			alexa_response.Say("I have absolutely no idea what you mean or will ever mean by that")
 		}
+	} else if request_type == "SessionEndedRequest" {
+		alexa_response.Say("Goodbye! I will miss you.")
+		alexa_response.EndSession()
+	} else {
+		alexa_response.Say("Huh?")
 	}
 	
 	return alexa_response, nil
